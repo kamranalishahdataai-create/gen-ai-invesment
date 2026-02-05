@@ -133,23 +133,31 @@ export default function App() {
       {/* Introductory Video Section */}
       <section className="intro-video-section">
         <div className="intro-video-container">
-          <div className="intro-video-wrapper" onClick={() => setVideoPopupOpen(true)}>
-            <div className="intro-video-thumbnail">
-              <div className="video-grid-overlay">
-                {/* Grid of placeholder images */}
-                <div className="grid-item"></div>
-                <div className="grid-item"></div>
-                <div className="grid-item"></div>
-                <div className="grid-item"></div>
-                <div className="grid-item"></div>
-                <div className="grid-item"></div>
-              </div>
-              <div className="intro-play-button">
-                <svg width="50" height="50" viewBox="0 0 50 50" fill="none">
-                  <polygon points="18,12 38,25 18,38" fill="currentColor"/>
-                </svg>
-              </div>
-              <div className="intro-video-label">Initial Introductory Video</div>
+          <h2 className="intro-video-title">Welcome to GenAI Investment Learning</h2>
+          <p className="intro-video-subtitle">Watch this short video to learn how our AI-powered platform can help you</p>
+          
+          <div className="intro-video-player-wrapper">
+            {/* Video Player - Vadoo AI Generated Video */}
+            {/* Video ID: 149165054943 - Replace INTRO_VIDEO_URL with actual URL from Vadoo dashboard */}
+            <video 
+              className="intro-video-player"
+              controls
+              poster="/assets/video-poster.jpg"
+              preload="metadata"
+            >
+              {/* Primary video source - Update this URL after Vadoo AI video is ready */}
+              <source 
+                src="https://cdn.vadoo.tv/videos/149165054943.mp4" 
+                type="video/mp4" 
+              />
+              {/* Fallback message */}
+              Your browser does not support the video tag.
+            </video>
+            
+            {/* Video Info */}
+            <div className="intro-video-info">
+              <span className="video-duration">~1 minute</span>
+              <span className="video-label">AI-Generated Introduction</span>
             </div>
           </div>
         </div>
