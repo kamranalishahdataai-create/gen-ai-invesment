@@ -1,24 +1,14 @@
-/**
- * Takeaways Component
- * ===================
- * Displays key takeaways from the educational content
- * Updated to match client feedback with numbered list
- * 
- * Props:
- * - items: Array of takeaway strings
- */
 export default function Takeaways({ items }) {
-  if (!items || items.length === 0) {
-    return null;
-  }
+  if (!items || items.length === 0) return null;
 
   return (
-    <div className="takeaways-container">
+    <div className="takeaways-card">
+      <h3>💡 Key Takeaways</h3>
       <ul className="takeaways-list">
         {items.map((item, idx) => (
-          <li key={idx} className="takeaway-item">
+          <li key={idx}>
             <span className="takeaway-number">{idx + 1}</span>
-            <span className="takeaway-text">{item}</span>
+            <span>{item}</span>
           </li>
         ))}
       </ul>

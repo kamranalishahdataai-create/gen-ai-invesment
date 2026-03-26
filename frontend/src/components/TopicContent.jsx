@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
-
-/**
- * Topic Content Component
- * =======================
- * Displays educational content with video placeholder and article
- * 
- * Phase 2: Enhanced error handling and graceful degradation
- */
+import VideoPlaceholder from "./VideoPlaceholder";
+import Takeaways from "./Takeaways";
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
@@ -15,142 +9,73 @@ export default function TopicContent({ topic, onBack }) {
   const [content, setContent] = useState(null);
   const [error, setError] = useState(null);
 
-  // Fetch AI-generated content for the topic
   const fetchContent = async () => {
     setLoading(true);
     setError(null);
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-
       const res = await fetch(`${API_BASE_URL}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: `Explain ${topic.title} for beginners` }),
+        body: JSON.stringify({ question: `Explain ${topic} for beginners` }),
         signal: controller.signal
       });
-
       clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch content");
-      }
+      if (!res.ok) throw new Error("Failed to fetch content");
       const data = await res.json();
       setContent(data);
     } catch (err) {
-      if (err.name === 'AbortError') {
-        setError("Request timed out. Please try again.");
-      } else if (err.message.includes('Failed to fetch')) {
-        setError("Unable to connect. The backend server may be offline.");
-      } else {
-        setError("Failed to load content. Please try again.");
-      }
-      console.error(err);
+      if (err.name === 'AbortError') setError("Request timed out. Please try again.");
+      else if (err.message.includes('Failed to fetch')) setError("Unable to connect. Backend may be offline.");
+      else setError("Failed to load content. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Auto-fetch content on mount
-  useEffect(() => {
-    fetchContent();
-  }, [topic.title]);
+  useEffect(() => { fetchContent(); }, [topic]);
 
   return (
     <div className="topic-content">
-      {/* Back Navigation */}
-      <button className="back-button" onClick={onBack}>
-        ← Back to {topic.section}
-      </button>
+      <button className="topic-back-btn" onClick={onBack}>← Back</button>
+      <h2>{topic}</h2>
 
-      {/* Topic Header */}
-      <div className="topic-header">
-        <h1>{topic.title}</h1>
-        <p className="topic-category">{topic.section} • {topic.subsection}</p>
-      </div>
+      {loading && (
+        <div className="results-card" style={{ textAlign: 'center', padding: '3rem' }}>
+          <div className="loading-spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: '32px', height: '32px', margin: '0 auto 1rem' }}></div>
+          <p style={{ color: 'var(--text-secondary)' }}>AI is generating content...</p>
+        </div>
+      )}
 
-      {/* Video Section */}
-      <div className="topic-video-section">
-        <div className="video-container">
-          <div className="video-placeholder animated-placeholder">
-            <div className="animated-gradient"></div>
-            <div className="play-button">▶</div>
-            <div className="coming-soon-label">
-              <span>🎬 Animated explainer coming soon</span>
+      {error && (
+        <div className="results-card">
+          <p style={{ color: 'var(--red)' }}>⚠️ {error}</p>
+          <button className="btn-wizard primary" onClick={fetchContent} style={{ marginTop: '1rem' }}>Try Again</button>
+        </div>
+      )}
+
+      {content && (
+        <>
+          <VideoPlaceholder script={content.script} topic={topic} />
+
+          <div className="results-card" style={{ marginTop: '1.5rem' }}>
+            <h3>📄 Understanding {topic}</h3>
+            <div className="results-text">
+              {content.script && content.script.split('\n').filter(p => p.trim()).map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
             </div>
           </div>
-        </div>
-        <div className="video-info">
-          <h3>Video Summary</h3>
-          <p>Watch this AI-generated explainer to understand {topic.title.toLowerCase()} in simple terms.</p>
-        </div>
-      </div>
 
-      {/* Article Section */}
-      <div className="topic-article-section">
-        <h2>📄 Understanding {topic.title}</h2>
-        
-        {loading && (
-          <div className="content-loading">
-            <div className="loading-spinner"></div>
-            <p>AI is generating educational content...</p>
-          </div>
-        )}
+          {content.key_takeaways && <Takeaways items={content.key_takeaways} />}
 
-        {error && (
-          <div className="content-error">
-            <p>{error}</p>
-            <button onClick={fetchContent}>Try Again</button>
-          </div>
-        )}
-
-        {content && (
-          <div className="article-content">
-            <div className="script-section">
-              <p>{content.script}</p>
+          {content.disclaimer && (
+            <div style={{ padding: '1rem', background: 'var(--bg-gray)', borderRadius: 'var(--radius-lg)', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '1rem' }}>
+              {content.disclaimer}
             </div>
-
-            {content.key_takeaways && content.key_takeaways.length > 0 && (
-              <div className="takeaways-section">
-                <h3>🎯 Key Takeaways</h3>
-                <ul>
-                  {content.key_takeaways.map((takeaway, index) => (
-                    <li key={index}>{takeaway}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {content.disclaimer && (
-              <div className="disclaimer-section">
-                <p>{content.disclaimer}</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {!content && !loading && !error && (
-          <div className="static-content">
-            <p>{topic.description || `Learn about ${topic.title.toLowerCase()} and how it affects your investment decisions.`}</p>
-            <button className="generate-btn" onClick={fetchContent}>
-              🤖 Generate AI Explanation
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Related Topics */}
-      {topic.relatedTopics && topic.relatedTopics.length > 0 && (
-        <div className="related-topics-section">
-          <h3>📚 Related Topics</h3>
-          <div className="related-topics-grid">
-            {topic.relatedTopics.map((related, index) => (
-              <div key={index} className="related-topic-card">
-                <span>{related}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+          )}
+        </>
       )}
     </div>
   );

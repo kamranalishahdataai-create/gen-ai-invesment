@@ -1,470 +1,379 @@
-import { useState, useEffect } from "react";
-import TopicContent from "./TopicContent";
+import { useState, useEffect } from 'react';
 
-/**
- * Macro Dashboard Component
- * Shows macroeconomic indicators for selected country
- */
-function MacroDashboard() {
-  const [selectedCountry, setSelectedCountry] = useState("india");
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState(null);
+const API_BASE_URL = "http://127.0.0.1:8000";
 
-  const countries = [
-    { code: "india", name: "India", currency: "INR", flag: "🇮🇳" },
-    { code: "usa", name: "United States", currency: "USD", flag: "🇺🇸" },
-    { code: "uk", name: "United Kingdom", currency: "GBP", flag: "🇬🇧" },
-    { code: "eu", name: "European Union", currency: "EUR", flag: "🇪🇺" },
-    { code: "japan", name: "Japan", currency: "JPY", flag: "🇯🇵" },
-    { code: "china", name: "China", currency: "CNY", flag: "🇨🇳" },
-  ];
+const COUNTRIES = [
+  { id: 'usa', name: 'United States', flag: '🇺🇸' },
+  { id: 'india', name: 'India', flag: '🇮🇳' },
+  { id: 'uk', name: 'United Kingdom', flag: '🇬🇧' },
+  { id: 'eu', name: 'European Union', flag: '🇪🇺' },
+  { id: 'japan', name: 'Japan', flag: '🇯🇵' },
+];
 
-  // Fetch macro data for selected country
-  const fetchMacroData = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`http://127.0.0.1:8000/macro/${selectedCountry}`);
-      if (!res.ok) throw new Error("Failed to fetch data");
-      const responseData = await res.json();
-      setData(responseData);
-    } catch (err) {
-      // Use mock data if API fails
-      setData(getMockMacroData(selectedCountry));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Mock data fallback
-  const getMockMacroData = (country) => {
-    const mockData = {
-      india: {
-        inflation: { value: "5.22%", trend: "down", change: "-0.3%" },
-        policyRate: { value: "6.50%", trend: "stable", name: "Repo Rate" },
-        gdpGrowth: { value: "7.8%", trend: "up", change: "+0.5%" },
-        crudeOil: { value: "$82.45", trend: "up", change: "+2.1%" },
-        currency: { value: "83.12", pair: "USD/INR", trend: "stable" },
-        govtBorrowing: { value: "₹15.43L Cr", trend: "up", fiscalYear: "FY24" },
-      },
-      usa: {
-        inflation: { value: "3.4%", trend: "down", change: "-0.2%" },
-        policyRate: { value: "5.50%", trend: "stable", name: "Fed Funds Rate" },
-        gdpGrowth: { value: "2.9%", trend: "up", change: "+0.3%" },
-        crudeOil: { value: "$82.45", trend: "up", change: "+2.1%" },
-        currency: { value: "1.00", pair: "USD Index", trend: "up" },
-        govtBorrowing: { value: "$34.1T", trend: "up", fiscalYear: "2024" },
-      },
-      uk: {
-        inflation: { value: "4.0%", trend: "down", change: "-0.6%" },
-        policyRate: { value: "5.25%", trend: "stable", name: "Bank Rate" },
-        gdpGrowth: { value: "0.6%", trend: "stable", change: "+0.1%" },
-        crudeOil: { value: "$82.45", trend: "up", change: "+2.1%" },
-        currency: { value: "0.79", pair: "USD/GBP", trend: "down" },
-        govtBorrowing: { value: "£2.6T", trend: "up", fiscalYear: "2024" },
-      },
-      eu: {
-        inflation: { value: "2.8%", trend: "down", change: "-0.4%" },
-        policyRate: { value: "4.50%", trend: "stable", name: "ECB Rate" },
-        gdpGrowth: { value: "0.5%", trend: "stable", change: "0%" },
-        crudeOil: { value: "$82.45", trend: "up", change: "+2.1%" },
-        currency: { value: "0.92", pair: "USD/EUR", trend: "stable" },
-        govtBorrowing: { value: "€13.4T", trend: "up", fiscalYear: "2024" },
-      },
-      japan: {
-        inflation: { value: "2.8%", trend: "up", change: "+0.2%" },
-        policyRate: { value: "0.10%", trend: "up", name: "BOJ Rate" },
-        gdpGrowth: { value: "1.9%", trend: "up", change: "+0.4%" },
-        crudeOil: { value: "$82.45", trend: "up", change: "+2.1%" },
-        currency: { value: "149.50", pair: "USD/JPY", trend: "up" },
-        govtBorrowing: { value: "¥1,286T", trend: "up", fiscalYear: "2024" },
-      },
-      china: {
-        inflation: { value: "0.2%", trend: "down", change: "-0.3%" },
-        policyRate: { value: "3.45%", trend: "down", name: "LPR" },
-        gdpGrowth: { value: "5.2%", trend: "down", change: "-0.3%" },
-        crudeOil: { value: "$82.45", trend: "up", change: "+2.1%" },
-        currency: { value: "7.24", pair: "USD/CNY", trend: "up" },
-        govtBorrowing: { value: "¥30T", trend: "up", fiscalYear: "2024" },
-      },
-    };
-    return mockData[country] || mockData.india;
-  };
-
-  useEffect(() => {
-    fetchMacroData();
-  }, [selectedCountry]);
-
-  const getTrendIcon = (trend) => {
-    switch (trend) {
-      case "up": return "📈";
-      case "down": return "📉";
-      default: return "➡️";
-    }
-  };
-
-  const getTrendClass = (trend) => {
-    switch (trend) {
-      case "up": return "trend-up";
-      case "down": return "trend-down";
-      default: return "trend-stable";
-    }
-  };
-
-  return (
-    <div className="macro-dashboard">
-      <div className="dashboard-header">
-        <h2>📊 Macro Dashboard</h2>
-        <p>Real-time macroeconomic indicators</p>
-      </div>
-
-      {/* Country Selector */}
-      <div className="country-selector">
-        <label>Select Country:</label>
-        <div className="country-buttons">
-          {countries.map((country) => (
-            <button
-              key={country.code}
-              className={`country-btn ${selectedCountry === country.code ? "active" : ""}`}
-              onClick={() => setSelectedCountry(country.code)}
-            >
-              <span className="country-flag">{country.flag}</span>
-              <span className="country-name">{country.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Dashboard Grid */}
-      {loading ? (
-        <div className="dashboard-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading macro data...</p>
-        </div>
-      ) : data ? (
-        <div className="indicators-grid">
-          <div className={`indicator-card ${getTrendClass(data.inflation.trend)}`}>
-            <div className="indicator-header">
-              <span className="indicator-icon">💹</span>
-              <span className="indicator-name">Inflation (CPI)</span>
-            </div>
-            <div className="indicator-value">{data.inflation.value}</div>
-            <div className="indicator-trend">
-              {getTrendIcon(data.inflation.trend)} {data.inflation.change}
-            </div>
-          </div>
-
-          <div className={`indicator-card ${getTrendClass(data.policyRate.trend)}`}>
-            <div className="indicator-header">
-              <span className="indicator-icon">🏦</span>
-              <span className="indicator-name">{data.policyRate.name}</span>
-            </div>
-            <div className="indicator-value">{data.policyRate.value}</div>
-            <div className="indicator-trend">
-              {getTrendIcon(data.policyRate.trend)} Policy Rate
-            </div>
-          </div>
-
-          <div className={`indicator-card ${getTrendClass(data.gdpGrowth.trend)}`}>
-            <div className="indicator-header">
-              <span className="indicator-icon">📊</span>
-              <span className="indicator-name">GDP Growth</span>
-            </div>
-            <div className="indicator-value">{data.gdpGrowth.value}</div>
-            <div className="indicator-trend">
-              {getTrendIcon(data.gdpGrowth.trend)} {data.gdpGrowth.change}
-            </div>
-          </div>
-
-          <div className={`indicator-card ${getTrendClass(data.crudeOil.trend)}`}>
-            <div className="indicator-header">
-              <span className="indicator-icon">🛢️</span>
-              <span className="indicator-name">Crude Oil (Brent)</span>
-            </div>
-            <div className="indicator-value">{data.crudeOil.value}</div>
-            <div className="indicator-trend">
-              {getTrendIcon(data.crudeOil.trend)} {data.crudeOil.change}
-            </div>
-          </div>
-
-          <div className={`indicator-card ${getTrendClass(data.currency.trend)}`}>
-            <div className="indicator-header">
-              <span className="indicator-icon">💱</span>
-              <span className="indicator-name">{data.currency.pair}</span>
-            </div>
-            <div className="indicator-value">{data.currency.value}</div>
-            <div className="indicator-trend">
-              {getTrendIcon(data.currency.trend)} Exchange Rate
-            </div>
-          </div>
-
-          <div className={`indicator-card ${getTrendClass(data.govtBorrowing.trend)}`}>
-            <div className="indicator-header">
-              <span className="indicator-icon">📋</span>
-              <span className="indicator-name">Govt Borrowing</span>
-            </div>
-            <div className="indicator-value">{data.govtBorrowing.value}</div>
-            <div className="indicator-trend">
-              {data.govtBorrowing.fiscalYear}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <p className="data-disclaimer">
-        * Data shown is for educational purposes. For real-time data, please refer to official sources.
-      </p>
-    </div>
-  );
-}
-
-/**
- * Macroeconomy Section
- * Contains 5 subsections: Macro 101, Dashboard, Indicator Impact, Events, Global Macro
- */
-
-const MACRO_DATA = {
-  "macro-101": {
-    title: "A. Macro 101 (Basics)",
-    icon: "📖",
-    description: "Fundamental macroeconomic concepts",
-    component: null,
-    topics: [
-      {
-        id: "gdp",
-        title: "GDP: What It Actually Means",
-        description: "Understanding Gross Domestic Product and its significance.",
-        hasVideo: true,
-      },
-      {
-        id: "inflation-cpi",
-        title: "Inflation & CPI",
-        description: "How inflation is measured and why it matters to investors.",
-        hasVideo: true,
-      },
-      {
-        id: "interest-rates",
-        title: "Interest Rates & Repo Rate",
-        description: "How central banks use interest rates to control the economy.",
-        hasVideo: true,
-      },
-      {
-        id: "fiscal-monetary",
-        title: "Fiscal vs Monetary Policy",
-        description: "Understanding government and central bank economic tools.",
-        hasVideo: false,
-      },
-      {
-        id: "business-cycles",
-        title: "Business Cycles",
-        description: "The natural rhythm of economic expansion and contraction.",
-        hasVideo: false,
-      },
-    ],
-  },
-  "dashboard": {
-    title: "B. Macro Dashboard",
-    icon: "📊",
-    description: "Live macroeconomic indicators by country",
-    component: "dashboard",
-    topics: [],
-  },
-  "indicator-impact": {
-    title: "C. Macro Indicator Impact",
-    icon: "🎯",
-    description: "How macro indicators affect investments",
-    component: null,
-    topics: [
-      {
-        id: "inflation-impact",
-        title: "Inflation Impact on Investments",
-        description: "How inflation affects different asset classes.",
-        hasVideo: true,
-      },
-      {
-        id: "interest-equity-debt",
-        title: "Interest Rate Impact on Equity vs Debt",
-        description: "Understanding rate sensitivity across asset classes.",
-        hasVideo: true,
-      },
-      {
-        id: "crude-oil-impact",
-        title: "Crude Oil Impact on Economy",
-        description: "How oil prices ripple through the economy.",
-        hasVideo: true,
-      },
-      {
-        id: "currency-impact",
-        title: "Relative Currency Impact",
-        description: "How currency movements affect investments.",
-        hasVideo: false,
-      },
-    ],
-  },
-  "macro-events": {
-    title: "D. Macro Events",
-    icon: "📰",
-    description: "Current macroeconomy news and analysis",
-    component: null,
-    topics: [
-      {
-        id: "rbi-rates",
-        title: "Why RBI Paused Rates",
-        description: "Analysis of RBI's monetary policy decisions.",
-        hasVideo: true,
-      },
-      {
-        id: "markets-gdp",
-        title: "Why Markets Fell Despite Good GDP",
-        description: "Understanding market reactions to economic data.",
-        hasVideo: true,
-      },
-      {
-        id: "fed-india",
-        title: "How US Fed Impacts Indian Markets",
-        description: "The global interconnection of monetary policies.",
-        hasVideo: true,
-      },
-    ],
-  },
-  "global-macro": {
-    title: "E. Global Macro",
-    icon: "🌐",
-    description: "Global macroeconomic trends",
-    component: null,
-    topics: [
-      {
-        id: "us-fed",
-        title: "US Fed Policy",
-        description: "Understanding Federal Reserve decisions and their global impact.",
-        hasVideo: true,
-      },
-      {
-        id: "china-slowdown",
-        title: "China Slowdown",
-        description: "Analyzing China's economic challenges and implications.",
-        hasVideo: true,
-      },
-      {
-        id: "geopolitical-risk",
-        title: "Geopolitical Risk",
-        description: "How political events affect global markets.",
-        hasVideo: false,
-      },
-      {
-        id: "commodity-cycles",
-        title: "Commodity Cycles",
-        description: "Understanding long-term commodity price patterns.",
-        hasVideo: false,
-      },
-    ],
-  },
+const INDICATORS = {
+  usa: [
+    { name: 'Interest Rate', desc: 'Federal Funds Rate', value: '5.25%', change: '+0.25%', dir: 'up' },
+    { name: 'CPI Inflation', desc: 'Consumer Price Index', value: '3.2%', change: '-0.3%', dir: 'down' },
+    { name: 'GDP Growth', desc: 'Quarterly Growth Rate', value: '2.5%', change: '+0.1%', dir: 'up' },
+    { name: 'Unemployment', desc: 'Unemployment Rate', value: '3.7%', change: '+0.1%', dir: 'up' },
+    { name: 'USD Index', desc: 'DXY Dollar Index', value: '104.2', change: '+0.8', dir: 'up' },
+    { name: 'Consumer Confidence', desc: 'Conference Board Index', value: '102.0', change: '-1.5', dir: 'down' },
+    { name: 'Trade Balance', desc: 'Balance of Trade', value: '-$68.3B', change: '-$2.1B', dir: 'down' },
+    { name: 'Housing Starts', desc: 'New Construction', value: '1.46M', change: '+3.2%', dir: 'up' },
+  ],
+  india: [
+    { name: 'Interest Rate', desc: 'Repo Rate (RBI)', value: '6.50%', change: '0%', dir: 'up' },
+    { name: 'CPI Inflation', desc: 'Consumer Price Index', value: '4.8%', change: '-0.2%', dir: 'down' },
+    { name: 'GDP Growth', desc: 'Quarterly Growth Rate', value: '7.2%', change: '+0.3%', dir: 'up' },
+    { name: 'Unemployment', desc: 'Unemployment Rate', value: '7.1%', change: '-0.2%', dir: 'down' },
+    { name: 'USD/INR', desc: 'Exchange Rate', value: '83.20', change: '+0.15', dir: 'up' },
+    { name: 'Consumer Confidence', desc: 'RBI Survey Index', value: '89.6', change: '+1.2', dir: 'up' },
+    { name: 'Trade Balance', desc: 'Balance of Trade', value: '-$22.1B', change: '+$0.8B', dir: 'up' },
+    { name: 'Industrial Production', desc: 'IIP Growth', value: '5.8%', change: '+0.4%', dir: 'up' },
+  ],
+  uk: [
+    { name: 'Interest Rate', desc: 'Bank Rate (BoE)', value: '5.25%', change: '0%', dir: 'up' },
+    { name: 'CPI Inflation', desc: 'Consumer Price Index', value: '4.0%', change: '-0.6%', dir: 'down' },
+    { name: 'GDP Growth', desc: 'Quarterly Growth Rate', value: '0.6%', change: '+0.1%', dir: 'up' },
+    { name: 'Unemployment', desc: 'Unemployment Rate', value: '4.2%', change: '+0.1%', dir: 'up' },
+    { name: 'GBP/USD', desc: 'Exchange Rate', value: '1.27', change: '+0.02', dir: 'up' },
+    { name: 'Consumer Confidence', desc: 'GfK Index', value: '-21', change: '+3', dir: 'up' },
+    { name: 'Trade Balance', desc: 'Balance of Trade', value: '-£4.1B', change: '-£0.3B', dir: 'down' },
+    { name: 'Housing Prices', desc: 'Nationwide Index', value: '-1.8%', change: '+0.5%', dir: 'up' },
+  ],
+  eu: [
+    { name: 'Interest Rate', desc: 'ECB Main Rate', value: '4.50%', change: '0%', dir: 'up' },
+    { name: 'CPI Inflation', desc: 'Harmonised CPI', value: '2.9%', change: '-0.4%', dir: 'down' },
+    { name: 'GDP Growth', desc: 'Quarterly Growth Rate', value: '0.9%', change: '+0.2%', dir: 'up' },
+    { name: 'Unemployment', desc: 'Unemployment Rate', value: '6.4%', change: '-0.1%', dir: 'down' },
+    { name: 'EUR/USD', desc: 'Exchange Rate', value: '1.09', change: '-0.01', dir: 'down' },
+    { name: 'Consumer Confidence', desc: 'EC Sentiment', value: '-16.1', change: '+0.8', dir: 'up' },
+    { name: 'Trade Balance', desc: 'Balance of Trade', value: '€28.2B', change: '+€3.1B', dir: 'up' },
+    { name: 'Industrial Production', desc: 'Eurozone Output', value: '-0.5%', change: '+0.3%', dir: 'up' },
+  ],
+  japan: [
+    { name: 'Interest Rate', desc: 'BoJ Policy Rate', value: '-0.10%', change: '0%', dir: 'up' },
+    { name: 'CPI Inflation', desc: 'Consumer Price Index', value: '2.8%', change: '+0.1%', dir: 'up' },
+    { name: 'GDP Growth', desc: 'Quarterly Growth Rate', value: '1.9%', change: '+0.3%', dir: 'up' },
+    { name: 'Unemployment', desc: 'Unemployment Rate', value: '2.5%', change: '0%', dir: 'up' },
+    { name: 'USD/JPY', desc: 'Exchange Rate', value: '149.5', change: '+1.2', dir: 'up' },
+    { name: 'Consumer Confidence', desc: 'Cabinet Office Index', value: '36.1', change: '+0.8', dir: 'up' },
+    { name: 'Trade Balance', desc: 'Balance of Trade', value: '-¥462B', change: '+¥85B', dir: 'up' },
+    { name: 'Industrial Production', desc: 'Factory Output', value: '-0.9%', change: '+1.2%', dir: 'up' },
+  ],
 };
 
+const EDU_CONCEPTS = [
+  { title: 'Inflation', desc: 'Understand how rising prices erode purchasing power and affect investment returns across different asset classes.', icon: '📈', iconClass: 'red', link: 'Learn about inflation →' },
+  { title: 'Interest Rates', desc: 'Learn how central bank rate decisions impact borrowing costs, bond prices, and stock market valuations.', icon: '🏦', iconClass: 'blue', link: 'Explore interest rates →' },
+  { title: 'GDP Growth', desc: 'Discover how economic output growth signals investment opportunities across sectors and geographies.', icon: '📊', iconClass: 'green', link: 'Understand GDP →' },
+  { title: 'Monetary Policy', desc: 'How central banks use tools like quantitative easing and interest rates to manage economic stability.', icon: '🏛️', iconClass: 'purple', link: 'Explore monetary policy →' },
+];
+
+const TOPIC_PILLS = ['Inflation', 'Interest Rates', 'GDP Growth', 'Unemployment', 'Trade Deficit', 'Fiscal Policy', 'Currency Markets'];
+
+const EVENTS = [
+  { date: 'Jan 15, 2026', title: 'Fed Interest Rate Decision', desc: 'Federal Reserve meeting to decide on rate policy.', impact: 'high' },
+  { date: 'Jan 22, 2026', title: 'US GDP Report (Q4)', desc: 'Quarterly GDP growth data release.', impact: 'high' },
+  { date: 'Feb 1, 2026', title: 'RBI Monetary Policy', desc: 'Reserve Bank of India rate decision.', impact: 'medium' },
+  { date: 'Feb 10, 2026', title: 'EU CPI Flash Estimate', desc: 'Preliminary eurozone inflation data.', impact: 'medium' },
+  { date: 'Feb 15, 2026', title: 'UK Employment Data', desc: 'UK unemployment and wages report.', impact: 'low' },
+  { date: 'Mar 1, 2026', title: 'China PMI Data', desc: 'Manufacturing purchasing managers index.', impact: 'medium' },
+];
+
+const SCENARIOS = [
+  { id: 'inflation', label: 'Rising Inflation', impacts: [{ asset: 'Equities', val: '-5.2%', neg: true }, { asset: 'Bonds', val: '-8.1%', neg: true }, { asset: 'Gold', val: '+12.3%', neg: false }] },
+  { id: 'rate-hike', label: 'Interest Rate Hike', impacts: [{ asset: 'Equities', val: '-3.8%', neg: true }, { asset: 'Bonds', val: '-6.5%', neg: true }, { asset: 'Real Estate', val: '-4.2%', neg: true }] },
+  { id: 'oil-shock', label: 'Oil Price Shock', impacts: [{ asset: 'Energy Stocks', val: '+18.5%', neg: false }, { asset: 'Airlines', val: '-12.3%', neg: true }, { asset: 'Consumer', val: '-3.1%', neg: true }] },
+];
+
 export default function Macroeconomy() {
-  const [activeSubsection, setActiveSubsection] = useState(null);
-  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [country, setCountry] = useState('usa');
+  const [conceptSearch, setConceptSearch] = useState('');
+  const [activePill, setActivePill] = useState(null);
+  const [activeScenario, setActiveScenario] = useState(0);
+  const [simInflation, setSimInflation] = useState(4);
+  const [simRate, setSimRate] = useState(5);
 
-  // Handle topic selection
-  const handleTopicClick = (subsectionKey, topic) => {
-    setSelectedTopic({
-      ...topic,
-      section: "Macroeconomy",
-      subsection: MACRO_DATA[subsectionKey].title,
-    });
+  // Live macro data from backend
+  const [liveData, setLiveData] = useState(null);
+  const [dataLoading, setDataLoading] = useState(false);
+
+  // Article search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Fetch macro data when country changes
+  useEffect(() => {
+    const fetchMacroData = async () => {
+      setDataLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/macro/${country}`);
+        if (res.ok) {
+          const json = await res.json();
+          setLiveData(json.data);
+        }
+      } catch (err) { console.error('Macro data fetch error:', err); }
+      finally { setDataLoading(false); }
+    };
+    fetchMacroData();
+  }, [country]);
+
+  // Article search via /ask
+  const handleConceptSearch = async (query) => {
+    const q = query || conceptSearch;
+    if (!q.trim()) return;
+    setSearchLoading(true);
+    setSearchResults(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: `Explain ${q} and its impact on investments` }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data);
+      }
+    } catch (err) { console.error('Search error:', err); }
+    finally { setSearchLoading(false); }
   };
 
-  // Handle back from topic
-  const handleBack = () => {
-    setSelectedTopic(null);
-  };
-
-  // If a topic is selected, show topic content
-  if (selectedTopic) {
-    return <TopicContent topic={selectedTopic} onBack={handleBack} />;
-  }
+  const data = INDICATORS[country] || INDICATORS['usa'];
+  const selectedCountry = COUNTRIES.find(c => c.id === country);
+  const scenario = SCENARIOS[activeScenario];
 
   return (
-    <div className="macroeconomy">
-      {/* Section Header */}
-      <div className="section-header">
-        <h1>🌍 Macroeconomy</h1>
-        <p>Understand how the economy affects your investments</p>
+    <div className="macro-page">
+      {/* Hero */}
+      <div className="page-hero">
+        <div className="page-hero-content">
+          <div className="page-hero-icon">🌍</div>
+          <h1>Macroeconomy Dashboard</h1>
+          <p>Track economic indicators, understand trends, and analyze their impact on your investments</p>
+        </div>
       </div>
 
-      {/* Subsection Navigation */}
-      <div className="subsection-nav">
-        {Object.entries(MACRO_DATA).map(([key, subsection]) => (
-          <button
-            key={key}
-            className={`subsection-tab ${activeSubsection === key ? "active" : ""}`}
-            onClick={() => setActiveSubsection(activeSubsection === key ? null : key)}
-          >
-            <span className="subsection-icon">{subsection.icon}</span>
-            <span className="subsection-title">{subsection.title}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Content Area */}
       <div className="macro-content">
-        {!activeSubsection ? (
-          // Show all subsections overview
-          <div className="subsections-grid">
-            {Object.entries(MACRO_DATA).map(([key, subsection]) => (
-              <div
-                key={key}
-                className="subsection-card"
-                onClick={() => setActiveSubsection(key)}
-              >
-                <div className="card-icon">{subsection.icon}</div>
-                <h3>{subsection.title}</h3>
-                <p>{subsection.description}</p>
-                {subsection.component === "dashboard" ? (
-                  <span className="topic-count">📊 Live Dashboard</span>
-                ) : (
-                  <span className="topic-count">{subsection.topics.length} topics</span>
-                )}
-              </div>
-            ))}
+        {/* Header */}
+        <div className="macro-top">
+          <h2>📊 Key Economic Indicators</h2>
+          <div className="country-select-pill">
+            <span>{selectedCountry?.flag}</span>
+            <select value={country} onChange={(e) => setCountry(e.target.value)}>
+              {COUNTRIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
           </div>
-        ) : activeSubsection === "dashboard" ? (
-          // Show Macro Dashboard
-          <div className="dashboard-section">
-            <button className="back-btn" onClick={() => setActiveSubsection(null)}>
-              ← All Sections
-            </button>
-            <MacroDashboard />
-          </div>
-        ) : (
-          // Show topics for selected subsection
-          <div className="topics-section">
-            <div className="topics-header">
-              <button className="back-btn" onClick={() => setActiveSubsection(null)}>
-                ← All Sections
-              </button>
-              <h2>
-                {MACRO_DATA[activeSubsection].icon}{" "}
-                {MACRO_DATA[activeSubsection].title}
-              </h2>
-              <p>{MACRO_DATA[activeSubsection].description}</p>
-            </div>
+        </div>
 
-            <div className="topics-grid">
-              {MACRO_DATA[activeSubsection].topics.map((topic) => (
-                <div
-                  key={topic.id}
-                  className={`topic-card ${topic.hasVideo ? "has-video" : ""}`}
-                  onClick={() => handleTopicClick(activeSubsection, topic)}
-                >
-                  {topic.hasVideo && <span className="video-badge">🎬 Video</span>}
-                  <h4>{topic.title}</h4>
-                  <p>{topic.description}</p>
-                  <span className="learn-more">Learn More →</span>
-                </div>
-              ))}
+        {/* Indicators List */}
+        {dataLoading && <p style={{ fontSize: '0.8rem', color: 'var(--primary)', padding: '0.5rem 0' }}>📡 Fetching live data...</p>}
+        {liveData && (
+          <div className="live-data-banner">
+            <div className="live-badge">🟢 Live Data</div>
+            <div className="live-indicators">
+              {liveData.inflation && <span>Inflation: <strong>{liveData.inflation.value}</strong></span>}
+              {liveData.policyRate && <span>{liveData.policyRate.name || 'Policy Rate'}: <strong>{liveData.policyRate.value}</strong></span>}
+              {liveData.gdpGrowth && <span>GDP: <strong>{liveData.gdpGrowth.value}</strong></span>}
+              {liveData.currency && <span>{liveData.currency.pair}: <strong>{liveData.currency.value}</strong></span>}
             </div>
           </div>
         )}
+        <div className="indicators-list">
+          {data.map((ind, i) => (
+            <div key={i} className="indicator-row">
+              <div className="ind-name">
+                <strong>{ind.name}</strong>
+                <span>{ind.desc}</span>
+              </div>
+              <div className="ind-value">{ind.value}</div>
+              <div className={`ind-change ${ind.dir === 'up' && ind.change.includes('+') ? 'up' : ind.dir === 'down' ? 'down' : 'up'}`}>
+                {ind.dir === 'up' ? '▲' : '▼'} {ind.change}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Historical Trends */}
+        <div className="macro-section">
+          <h3>📉 Historical Trends</h3>
+          <div className="trends-grid">
+            {['GDP Growth Rate', 'Inflation Rate (CPI)', 'Interest Rate'].map((title, i) => (
+              <div key={i} className="trend-chart-card">
+                <h4>{title}</h4>
+                <div className="trend-chart-placeholder">
+                  <svg viewBox="0 0 200 80" style={{ width: '100%', height: '100%' }}>
+                    <defs><linearGradient id={`tg${i}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={['#6366f1','#10b981','#f59e0b'][i]} stopOpacity="0.3"/><stop offset="100%" stopColor={['#6366f1','#10b981','#f59e0b'][i]} stopOpacity="0"/></linearGradient></defs>
+                    <path d={[
+                      'M10,60 L40,45 L70,50 L100,35 L130,30 L160,20 L190,15 L190,75 L10,75 Z',
+                      'M10,30 L40,35 L70,25 L100,40 L130,45 L160,35 L190,30 L190,75 L10,75 Z',
+                      'M10,50 L40,50 L70,45 L100,40 L130,35 L160,35 L190,30 L190,75 L10,75 Z',
+                    ][i]} fill={`url(#tg${i})`} />
+                    <path d={[
+                      'M10,60 L40,45 L70,50 L100,35 L130,30 L160,20 L190,15',
+                      'M10,30 L40,35 L70,25 L100,40 L130,45 L160,35 L190,30',
+                      'M10,50 L40,50 L70,45 L100,40 L130,35 L160,35 L190,30',
+                    ][i]} fill="none" stroke={['#6366f1','#10b981','#f59e0b'][i]} strokeWidth="2"/>
+                  </svg>
+                </div>
+                <p>{['Quarterly GDP growth showing recovery trend', 'Consumer price inflation showing easing pattern', 'Central bank rate decisions over the past year'][i]}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Educational Concepts */}
+        <div className="macro-section">
+          <h3>📚 Understanding Macroeconomic Concepts</h3>
+          <div className="edu-intro">
+            <h4>💡 Why Macroeconomics Matters for Investors</h4>
+            <p>Understanding macroeconomic forces helps you anticipate market movements, identify opportunities, and protect your portfolio against economic risks. These concepts form the foundation of informed investment decision-making.</p>
+          </div>
+          <div className="edu-concepts-grid">
+            {EDU_CONCEPTS.map((c, i) => (
+              <div key={i} className="edu-concept-card">
+                <div className={`edu-concept-icon ${c.iconClass}`}>{c.icon}</div>
+                <h4>{c.title}</h4>
+                <p>{c.desc}</p>
+                <span className="learn-link">{c.link}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Explore Concepts */}
+        <div className="explore-concepts">
+          <h4>🔍 Explore More Economic Concepts</h4>
+          <div className="concept-search">
+            <input
+              placeholder="Search for economic concepts..."
+              value={conceptSearch}
+              onChange={(e) => setConceptSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleConceptSearch()}
+            />
+            <button className="concept-search-btn" onClick={() => handleConceptSearch()} disabled={searchLoading || !conceptSearch.trim()}>
+              {searchLoading ? '⏳' : '🔍'}
+            </button>
+          </div>
+          <div className="concept-pills">
+            {TOPIC_PILLS.map((p, i) => (
+              <button key={i} className={`concept-pill ${activePill === i ? 'active' : ''}`} onClick={() => { setActivePill(activePill === i ? null : i); handleConceptSearch(p); }}>{p}</button>
+            ))}
+          </div>
+          {searchLoading && <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}><span className="loading-spinner" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--primary)', width: 20, height: 20, display: 'inline-block', verticalAlign: 'middle', marginRight: '0.5rem' }}></span>AI is analyzing this topic...</div>}
+          {searchResults && (
+            <div className="concept-results">
+              <div className="concept-result-card">
+                <h5>🔍 {searchResults.topic || conceptSearch}</h5>
+                <div className="concept-result-text">
+                  {searchResults.script && searchResults.script.split('\n').filter(p => p.trim()).slice(0, 3).map((p, i) => <p key={i}>{p}</p>)}
+                </div>
+                {searchResults.key_takeaways && (
+                  <div className="concept-takeaways">
+                    <strong>Key Takeaways:</strong>
+                    <ul>{searchResults.key_takeaways.slice(0, 3).map((t, i) => <li key={i}>{t}</li>)}</ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Upcoming Events */}
+        <div className="macro-section">
+          <h3>📅 Upcoming Economic Events</h3>
+          <div className="events-grid">
+            {EVENTS.map((ev, i) => (
+              <div key={i} className="event-card">
+                <div className="event-date">{ev.date}</div>
+                <span className={`event-impact ${ev.impact}`}>{ev.impact === 'high' ? '🔴 High Impact' : ev.impact === 'medium' ? '🟡 Medium Impact' : '🟢 Low Impact'}</span>
+                <h4>{ev.title}</h4>
+                <p>{ev.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Impact Scoring Engine */}
+        <div className="macro-section">
+          <h3>🎯 Impact Scoring Engine</h3>
+          <div className="impact-tabs">
+            {SCENARIOS.map((s, i) => (
+              <button key={i} className={`impact-tab ${activeScenario === i ? 'active' : ''}`} onClick={() => setActiveScenario(i)}>{s.label}</button>
+            ))}
+          </div>
+          <div className="impact-chart">
+            <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: 400 }}>
+              {scenario.impacts.map((imp, i) => {
+                const barW = 80, gap = 40, startX = 60 + i * (barW + gap);
+                const val = parseFloat(imp.val);
+                const barH = Math.min(Math.abs(val) * 6, 120);
+                const y = imp.neg ? 90 : 90 - barH;
+                return (
+                  <g key={i}>
+                    <rect x={startX} y={y} width={barW} height={barH} rx="4" fill={imp.neg ? '#ef4444' : '#10b981'} opacity="0.8" />
+                    <text x={startX + barW/2} y={y - 8} textAnchor="middle" fontSize="12" fontWeight="700" fill={imp.neg ? '#ef4444' : '#10b981'}>{imp.val}</text>
+                    <text x={startX + barW/2} y={170} textAnchor="middle" fontSize="10" fill="#64748b">{imp.asset}</text>
+                  </g>
+                );
+              })}
+              <line x1="40" y1="90" x2="380" y2="90" stroke="#e2e8f0" strokeWidth="1" />
+            </svg>
+          </div>
+          <div className="impact-cards">
+            {scenario.impacts.map((imp, i) => (
+              <div key={i} className="impact-card">
+                <div className="impact-label">{imp.asset}</div>
+                <div className={`impact-val ${imp.neg ? 'neg' : 'pos'}`}>{imp.val}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scenario Simulator */}
+        <div className="macro-section">
+          <h3>🔬 Economic Scenario Simulator</h3>
+          <div style={{ background: 'var(--bg-white)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '1.5rem', position: 'relative' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              <div>
+                <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '0.5rem' }}>
+                  Inflation Rate: <strong>{simInflation}%</strong>
+                </label>
+                <input type="range" className="age-slider" min="0" max="15" step="0.5" value={simInflation} onChange={(e) => setSimInflation(Number(e.target.value))} />
+                <div className="age-slider-labels"><span>0%</span><span>15%</span></div>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.85rem', fontWeight: 500, display: 'block', marginBottom: '0.5rem' }}>
+                  Interest Rate: <strong>{simRate}%</strong>
+                </label>
+                <input type="range" className="age-slider" min="0" max="15" step="0.25" value={simRate} onChange={(e) => setSimRate(Number(e.target.value))} />
+                <div className="age-slider-labels"><span>0%</span><span>15%</span></div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+              <div className="metric-card green" style={{ textAlign: 'center' }}>
+                <div className="m-label">Fixed Income Impact</div>
+                <div className="m-value" style={{ color: simRate > 6 ? 'var(--green)' : 'var(--red)' }}>{simRate > 6 ? '+' : ''}{((simRate - 5) * 1.5).toFixed(1)}%</div>
+              </div>
+              <div className="metric-card purple" style={{ textAlign: 'center' }}>
+                <div className="m-label">Equity Impact</div>
+                <div className="m-value" style={{ color: simInflation > 5 ? 'var(--red)' : 'var(--green)' }}>{simInflation > 5 ? '' : '+'}{((5 - simInflation) * 2).toFixed(1)}%</div>
+              </div>
+              <div className="metric-card amber" style={{ textAlign: 'center' }}>
+                <div className="m-label">Gold Impact</div>
+                <div className="m-value" style={{ color: simInflation > 4 ? 'var(--green)' : 'var(--text-muted)' }}>{simInflation > 4 ? '+' : ''}{((simInflation - 3) * 2.5).toFixed(1)}%</div>
+              </div>
+            </div>
+
+            {/* Pro Overlay */}
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.85)', borderRadius: 'var(--radius-xl)', display: 'none', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '0.5rem' }}>
+              <span style={{ fontSize: '2rem' }}>🔒</span>
+              <span style={{ fontWeight: 600 }}>Pro Feature</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Upgrade to Pro to access the full simulator</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
